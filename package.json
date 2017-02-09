@@ -1,6 +1,17 @@
 {
+  "name": "todo-api",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "https://github.com/oliwer94/Todo-app-node.git",
+  "author": "oliwer94 <oliwer94@gmail.com>",
+  "license": "MIT",
   "dependencies": {
     "@types/mongodb": "^2.1.38",
     "mongodb": "^2.2.22"
+  },
+  "scripts": {
+    
+    "start-mongo":"cd C:/Program Files/Mongodb/Server/3.4/bin/ & mongod.exe --dbpath /Users/oliwer/mongo-data & cd C:/Users/oliwer/Desktop/node-stuff/todo-api"
+
   }
 }
