@@ -6,14 +6,25 @@
   "author": "oliwer94 <oliwer94@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "@types/expect": "^1.20.0",
+    "@types/mocha": "^2.2.39",
     "@types/mongodb": "^2.1.38",
     "@types/mongoose": "^4.7.5",
+    "@types/supertest": "^2.0.0",
     "body-parser": "^1.16.1",
     "express": "^4.14.1",
     "mongodb": "^2.2.22",
     "mongoose": "^4.8.1"
   },
   "scripts": {
-    "start": "cd C:/Program Files/Mongodb/Server/3.4/bin/ & mongod.exe --dbpath /Users/oliwer/mongo-data & cd C:/Users/oliwer/Desktop/node-stuff/todo-api"
+    "start": "cd C:/Program Files/Mongodb/Server/3.4/bin/ & mongod.exe --dbpath /Users/oliwer/mongo-data & cd C:/Users/oliwer/Desktop/node-stuff/todo-api",
+    "test":"mocha server/**/*.test.js",
+    "test-watch":"nodemon --exec 'test'"
+  },
+  "devDependencies": {
+    "expect": "^1.20.2",
+    "mocha": "^3.2.0",
+    "nodemon": "^1.11.0",
+    "supertest": "^3.0.0"
   }
 }
