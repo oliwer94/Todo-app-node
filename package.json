@@ -7,11 +7,13 @@
   "license": "MIT",
   "dependencies": {
     "@types/mongodb": "^2.1.38",
-    "mongodb": "^2.2.22"
+    "@types/mongoose": "^4.7.5",
+    "body-parser": "^1.16.1",
+    "express": "^4.14.1",
+    "mongodb": "^2.2.22",
+    "mongoose": "^4.8.1"
   },
   "scripts": {
-    
-    "start-mongo":"cd C:/Program Files/Mongodb/Server/3.4/bin/ & mongod.exe --dbpath /Users/oliwer/mongo-data & cd C:/Users/oliwer/Desktop/node-stuff/todo-api"
-
+    "start": "cd C:/Program Files/Mongodb/Server/3.4/bin/ & mongod.exe --dbpath /Users/oliwer/mongo-data & cd C:/Users/oliwer/Desktop/node-stuff/todo-api"
   }
 }
