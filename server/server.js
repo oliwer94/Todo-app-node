@@ -12,13 +12,11 @@ var app = express();
 app.use(bodyParser.json());
 
 //CREATE TODO
-app.post('/todos', (req, res) => 
-{
+app.post('/todos', (req, res) => {
     var todo = new Todo({ text: req.body.text });
 
-    todo.save().then((docs) => 
-    {
-        res.send(docs);
+    todo.save().then((todos) => {
+        res.send(todos);
     },
         (e) => {
             res.status(400).send(e);
@@ -27,11 +25,14 @@ app.post('/todos', (req, res) =>
 });
 
 //GET TODOS 
-app.get('/todos', (req, res) => 
-{
-    Todo.find().then((docs)    => {
-                res.send(docs);
-    });
+app.get('/todos', (req, res) => {
+    Todo.find().then((todos) => {
+        res.send({todos});
+    },
+        (e) => {
+            res.status(400).send(e);
+        }
+    );
 });
 
 //GET ONE TODO
@@ -42,4 +43,4 @@ app.listen(PORT, () => {
     console.log("Started on port ", PORT);
 });
 
-module.exports ={app};
+module.exports = { app };
