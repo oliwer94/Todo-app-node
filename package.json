@@ -15,10 +15,13 @@
     "express": "^4.14.1",
     "mongodb": "^2.2.22",
     "mongoose": "^4.8.1"
+  },  
+  "engines":{
+    "node":"6.6.0"
   },
   "scripts": {
-    "start": "cd C:/Program Files/Mongodb/Server/3.4/bin/ & mongod.exe --dbpath /Users/oliwer/mongo-data & cd C:/Users/oliwer/Desktop/node-stuff/todo-api",
-    "test":"mocha server/**/*.test.js",
+    "start":"node server/server.js",
+     "test":"mocha server/**/*.test.js",
     "test-watch":"nodemon --exec 'test'"
   },
   "devDependencies": {
