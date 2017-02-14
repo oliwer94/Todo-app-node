@@ -1,6 +1,7 @@
 var express = require('express');
 var bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const _=require('lodash');
 
 var {mongoose} = require('./db/mongoose');
 var {Todo} = require('./model/todo');
@@ -13,13 +14,14 @@ app.use(bodyParser.json());
 
 //CREATE TODO
 app.post('/todos', (req, res) => {
+    
     var todo = new Todo({ text: req.body.text });
 
     todo.save().then((todos) => {
         res.send(todos);
     },
         (e) => {
-            res.sendStatus(400).send(e);
+            res.sendStatus(400);
         }
     );
 });
@@ -30,10 +32,12 @@ app.get('/todos', (req, res) => {
         res.send({ todos });
     },
         (e) => {
-            res.sendStatus(400).send(e);
+            res.sendStatus(400);
         }
     );
 });
+
+
 
 //GET ONE TODO
 app.get('/todos/:id', (req, res) => {
@@ -41,16 +45,16 @@ app.get('/todos/:id', (req, res) => {
         return res.sendStatus(400);
     }
 
-    Todo.findById(req.params.id).then((todos) => {
-        if (todos) {
-            res.send({ todos });
+    Todo.findById(req.params.id).then((todo) => {
+        if (todo) {
+            res.send({ todo });
         }
         else {
             res.sendStatus(404);
         }
     },
         (e) => {
-            res.sendStatus(400).send(e);
+            res.sendStatus(400);
         }
     );
 });
@@ -61,19 +65,52 @@ app.delete('/todos/:id', (req, res) => {
         return res.sendStatus(400);
     }
 
-    Todo.findByIdAndRemove(req.params.id).then((todos) => {
-        if (todos) {
-            res.send('Item has been removed: '+JSON.stringify(todos,undefined,2) );
+    Todo.findByIdAndRemove(req.params.id).then((todo) => {
+        if (todo) {
+            res.send({todo} );
         }
         else {
             res.sendStatus(404);
         }
     },
         (e) => {
-            res.sendStatus(400).send(e);
+            res.sendStatus(400);
         }
     );
 });
+
+app.patch('/todos/:id', (req,res) =>
+{
+    var id = req.params.id;
+    var body = _.pick(req.body,['text','completed']);
+
+    if (!ObjectID.isValid(req.params.id)) {
+        return res.status(400).send("ID is invalid");
+    }
+
+    if(_.isBoolean(body.completed) && body.completed)
+    {
+        body.completedAt = new Date().getTime();
+    }
+    else
+    {
+        body.completed = false;
+        body.completedAt = null;
+    }
+
+    Todo.findByIdAndUpdate(id, {$set:body},{new:true}).then((todo) =>
+    {
+        if (todo) {
+            res.send({todo} );
+        }
+        else {
+            res.sendStatus(404);
+        }
+
+    }).catch((e) => res.status(400).send(e));
+
+});
+
 
 
 app.listen(PORT, () => {
