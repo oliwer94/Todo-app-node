@@ -114,6 +114,23 @@ app.patch('/todos/:id', (req,res) =>
 });
 
 
+//CREATE TODO
+app.post('/users', (req, res) => {
+    
+    
+     var body = _.pick(req.body,['email','password']);
+    
+     var user = new User({email:body.email,password:body.password});
+ console.log(user);
+    user.save().then((user) => {
+        res.send(user);
+    },
+        (e) => {
+            res.status(400).send(e);
+        }
+    );
+});
+
 
 app.listen(PORT, () => {
     console.log("Started on port ", PORT);
