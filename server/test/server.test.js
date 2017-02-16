@@ -4,17 +4,28 @@ const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../model/todo');
+const {User} = require('./../model/user');
 
 var dummyTodos = [
     { _id: new ObjectID(), text: 'first' },
     { _id: new ObjectID(), text: 'first', completed: false },
     { _id: new ObjectID(), text: 'first', completedAt: 333 }];
 
+var dummyUsers = [
+    { email: 'first@first.com',password:'123456' },
+    { email: 'second@first.com',password:'234567' },
+    { email: 'third@first.com',password:'456789' }];
+
 
 
 beforeEach((done) => {
     Todo.remove({}).then(() => {
         return Todo.insertMany(dummyTodos);
+    }).then(() => done());
+});
+beforeEach((done) => {
+    User.remove({}).then(() => {
+        return User.insertMany(dummyUsers);
     }).then(() => done());
 });
 
@@ -159,6 +170,89 @@ describe('UPDATE /todos/:id', () => {
             });
     });
 });
+describe('POST /users', () => {
 
+    it('should create a new user', (done) => {
+        var email = 'valid@valid.com';
+        var password = 'vallidpw';
 
+        request(app)
+            .post('/users')
+            .send({ email,password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.email).toBe(email);
+            })
+            .end((err) => {
+                if (err) {
+                    return done(err);
+                }
+
+                User.find({ email,password }).then((users) => {
+                    expect(users.length).toBe(1);
+                    expect(users[0].email).toBe(email);
+                    return done();
+                }).catch((e) => done(e));
+            });
+    });
+
+    it('should not create user with an existing email', (done) => {
+
+         var email = dummyUsers[0].email;;
+        var password = 'vallidpw';
+
+        request(app)
+            .post('/users')
+            .send({email,password})
+            .expect(400)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                Todo.find().then((todos) => {
+                    expect(todos.length).toBe(3);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+    it('should not create user without an email', (done) => {
+
+        var password = 'vallidpw';
+
+        request(app)
+            .post('/users')
+            .send({password})
+            .expect(400)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                Todo.find().then((todos) => {
+                    expect(todos.length).toBe(3);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+    it('should not create user without a password', (done) => {
+
+         var email = dummyUsers[0].email;
+
+        request(app)
+            .post('/users')
+            .send({email})
+            .expect(400)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                Todo.find().then((todos) => {
+                    expect(todos.length).toBe(3);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+});
 
