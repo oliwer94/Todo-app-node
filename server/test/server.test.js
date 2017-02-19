@@ -6,30 +6,16 @@ const jwt = require('jsonwebtoken');
 const {app} = require('./../server');
 const {Todo} = require('./../model/todo');
 const {User} = require('./../model/user');
+const seed = require('./seed/seed');
 
-var dummyTodos = [
-    { _id: new ObjectID(), text: 'first' },
-    { _id: new ObjectID(), text: 'first', completed: false },
-    { _id: new ObjectID(), text: 'first', completedAt: 333 }];
-
-var dummyUsers = [
-    { _id: new ObjectID(), email: 'first@first.com', password: '123456', 'tokens': { access: 'auth', token: '' } },
-    { _id: new ObjectID(), email: 'second@first.com', password: '234567', 'tokens': { access: 'auth', token: '' } },
-    { _id: new ObjectID(), email: 'third@first.com', password: '456789', 'tokens': { access: 'auth', token: '' } }];
-
-dummyUsers[0].tokens.token = jwt.sign({ _id: dummyUsers[0]._id.toHexString(), access: dummyUsers[0].tokens.access }, 'abc123').toString();
-dummyUsers[1].tokens.token = jwt.sign({ _id: dummyUsers[1]._id.toHexString(), access: dummyUsers[1].tokens.access }, 'abc123').toString();
-dummyUsers[2].tokens.token = jwt.sign({ _id: dummyUsers[2]._id.toHexString(), access: dummyUsers[2].tokens.access }, 'abc123').toString();
+var dummyTodos = seed.dummyTodos;
+var dummyUsers = seed.dummyUsers;
 
 beforeEach((done) => {
-    Todo.remove({}).then(() => {
-        return Todo.insertMany(dummyTodos);
-    }).then(() => done());
+    seed.populateTodos(done);
 });
 beforeEach((done) => {
-    User.remove({}).then(() => {
-        return User.insertMany(dummyUsers);
-    }).then(() => done());
+    seed.populateUsers(done);
 });
 
 describe('POST /todos', () => {
@@ -191,9 +177,10 @@ describe('POST /users', () => {
                     return done(err);
                 }
 
-                User.find({ email, password }).then((users) => {
+                User.find({ email }).then((users) => {
                     expect(users.length).toBe(1);
                     expect(users[0].email).toBe(email);
+                    expect(users.password).toNotBe(dummyUsers[0].password);
                     return done();
                 }).catch((e) => done(e));
             });
@@ -257,6 +244,7 @@ describe('POST /users', () => {
                 }).catch((e) => done(e));
             });
     });
+
 });
 
 
@@ -274,34 +262,118 @@ describe('GET /users', () => {
             })
             .end(done);
     });
+});
+
+describe('GET /users/me', () => {
+    it('should return me as a user', (done) => {
+
+        var base = { 'x-auth': dummyUsers[0].tokens.token };
+
+        request(app)
+            .get('/users/me')
+            .set(base)
+            .expect(200)
+            .expect((res) => {
+                expect(res.body.email).toBe(dummyUsers[0].email);
+                expect(res.body._id).toBe(dummyUsers[0]._id.toHexString());
+            })
+            .end(done);
     });
 
-    describe('GET /users/me', () => 
-    {
-        it('should return me as a user', (done) => {
 
-            var base = { 'x-auth': dummyUsers[0].tokens.token };
+    it('should return a 401', (done) => {
 
-            request(app)
-                .get('/users/me')
-                .set(base)
-                .expect(200)
-                .expect((res) => {
-                    expect(res.body.email).toBe(dummyUsers[0].email);
-                })
-                .end(done);
-        });
+        var base = { 'x-auth': '' };
 
-
-        it('should return a 401', (done) => {
-
-            var base = { 'x-auth': '' };
-
-            request(app)
-                .get('/users/me')
-                .set(base)
-                .expect(401)
-                .end(done);
-        });
-
+        request(app)
+            .get('/users/me')
+            .set(base)
+            .expect(401)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end(done);
     });
+
+    it('should hash the password', (done) => {
+
+        var email = dummyUsers[0].email;
+
+        request(app)
+            .get('/users')
+            .expect(200)
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+
+                User.find({ email }).then((user) => {
+                    expect(user.password).toNotBe(dummyUsers[0].password);
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+
+});
+
+describe('GET /users/login', () => 
+{
+
+
+    it('should return me as a user', (done) => {
+
+        request(app)
+            .post('/users/login')
+            .send({ email: dummyUsers[0].email, password: dummyUsers[0].password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.header['x-auth']).toExist();
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                User.findById(dummyUsers[0]._id.toHexString()).then((user) => {
+                    expect(user.tokens[1]).toInclude({ access: 'auth', token: res.header['x-auth'] });
+                    done();
+                }).catch((e) => done(e));
+            });
+    });
+ 
+
+    it('should return a 400 because wrong email', (done) => {
+
+        request(app)
+            .post('/users/login')
+            .send({ email: dummyUsers[0].email+'4', password: dummyUsers[0].password })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                return done();
+            });
+    });
+
+    it('should return a 400', (done) => {
+
+        request(app)
+            .post('/users/login')
+            .send({ email: dummyUsers[0].email, password: dummyUsers[0].password+'4' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.body).toEqual({});
+            })
+            .end((err, res) => {
+                if (err) {
+                    return done(err);
+                }
+                return done();
+            });
+    });
+
+});
+
