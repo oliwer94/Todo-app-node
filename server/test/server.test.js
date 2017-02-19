@@ -316,8 +316,7 @@ describe('GET /users/me', () => {
 
 });
 
-describe('GET /users/login', () => 
-{
+describe('GET /users/login', () => {
 
 
     it('should return me as a user', (done) => {
@@ -339,13 +338,13 @@ describe('GET /users/login', () =>
                 }).catch((e) => done(e));
             });
     });
- 
+
 
     it('should return a 400 because wrong email', (done) => {
 
         request(app)
             .post('/users/login')
-            .send({ email: dummyUsers[0].email+'4', password: dummyUsers[0].password })
+            .send({ email: dummyUsers[0].email + '4', password: dummyUsers[0].password })
             .expect(400)
             .expect((res) => {
                 expect(res.body).toEqual({});
@@ -362,7 +361,7 @@ describe('GET /users/login', () =>
 
         request(app)
             .post('/users/login')
-            .send({ email: dummyUsers[0].email, password: dummyUsers[0].password+'4' })
+            .send({ email: dummyUsers[0].email, password: dummyUsers[0].password + '4' })
             .expect(400)
             .expect((res) => {
                 expect(res.body).toEqual({});
@@ -373,6 +372,28 @@ describe('GET /users/login', () =>
                 }
                 return done();
             });
+    });
+
+    describe('GET /users/token/me', () => {
+
+        it('should remove auth token on logout', (done) => {
+
+            request(app)
+                .delete('/users/me/token')
+                .send({ email: dummyUsers[0].email, password: dummyUsers[0].password  })
+                .expect(401)
+                .expect((res) => {
+                    expect(res.body).toEqual({});
+                })
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+                    return done();
+                });
+        });
+
+
     });
 
 });

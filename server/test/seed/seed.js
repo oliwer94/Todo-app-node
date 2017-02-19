@@ -13,9 +13,9 @@ var dummyTodos = [
     { _id: new ObjectID(), text: 'first', completedAt: 333 }];
 
 var dummyUsers = [
-    { _id: new ObjectID(), email: 'first@first.com', password: 'asd123', 'tokens': { access: 'auth', token: '' } },
-    { _id: new ObjectID(), email: 'second@first.com', password: 'asd123', 'tokens': { access: 'auth', token: '' } },
-    { _id: new ObjectID(), email: 'third@first.com', password: 'asd123', 'tokens': { access: 'auth', token: '' } }];
+    { _id: new ObjectID(),verified: false, email: 'first@first.com', password: 'asd123', 'tokens': { access: 'auth', token: '' } },
+    { _id: new ObjectID(),verified: false, email: 'second@first.com', password: 'asd123', 'tokens': { access: 'auth', token: '' } },
+    { _id: new ObjectID(),verified: false, email: 'third@first.com', password: 'asd123', 'tokens': { access: 'auth', token: '' } }];
 
 dummyUsers[0].tokens.token = jwt.sign({ _id: dummyUsers[0]._id.toHexString(), access: dummyUsers[0].tokens.access }, 'abc123').toString();
 dummyUsers[1].tokens.token = jwt.sign({ _id: dummyUsers[1]._id.toHexString(), access: dummyUsers[1].tokens.access }, 'abc123').toString();
