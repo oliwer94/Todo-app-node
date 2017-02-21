@@ -126,7 +126,7 @@ app.patch('/todos/:id', authenticate, (req, res) => {
 });
 
 //CREATE TODO
-app.post('/users', (req, res) => {
+app.post('/register', (req, res) => {
 
     var body = _.pick(req.body, ['email', 'password']);
     var user = new User(body);
@@ -206,11 +206,11 @@ app.get('/users/verify/:id', (req, res) => {
 });
 
 //GET USER ME 
-app.get('/users/me', authenticate, (req, res) => {
+app.get('/me', authenticate, (req, res) => {
     res.send(req.user);
 });
 
-app.post('/users/login', (req, res) => {
+app.post('/login', (req, res) => {
 
     var body = _.pick(req.body, ['email', 'password']);
 
@@ -223,7 +223,7 @@ app.post('/users/login', (req, res) => {
 });
 
 //Delte users/me/logout
-app.get('/users/me/logout', authenticate, (req, res) => {
+app.get('/me/logout', authenticate, (req, res) => {
     req.user.removeToken(req.token).then(() => {
         res.status(200).send();
     }, () => { res.status(400).send(); });

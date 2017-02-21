@@ -229,14 +229,14 @@ describe('UPDATE /todos/:id', () => {
     });
 });
 
-describe('POST /users', () => {
+describe('POST /register', () => {
 
     it('should create a new user', (done) => {
         var email = 'valid@valid.com';
         var password = 'vallidpw';
 
         request(app)
-            .post('/users')
+            .post('/register')
             .send({ email, password })
             .expect(200)
             .expect((res) => {
@@ -262,7 +262,7 @@ describe('POST /users', () => {
         var password = 'vallidpw';
 
         request(app)
-            .post('/users')
+            .post('/register')
             .send({ email, password })
             .expect(400)
             .end((err, res) => {
@@ -281,7 +281,7 @@ describe('POST /users', () => {
         var password = 'vallidpw';
 
         request(app)
-            .post('/users')
+            .post('/register')
             .send({ password })
             .expect(400)
             .end((err, res) => {
@@ -300,7 +300,7 @@ describe('POST /users', () => {
         var email = dummyUsers[0].email;
 
         request(app)
-            .post('/users')
+            .post('/register')
             .send({ email })
             .expect(400)
             .end((err, res) => {
@@ -333,14 +333,14 @@ describe('GET /users', () => {
     });
 });
 
-describe('GET /users/me', () => {
+describe('GET /me', () => {
 
     it('should return me as a user', (done) => {
 
         var base = { 'x-auth': dummyUsers[0].tokens[0].token };
 
         request(app)
-            .get('/users/me')
+            .get('/me')
             .set(base)
             .expect(200)
             .expect((res) => {
@@ -355,7 +355,7 @@ describe('GET /users/me', () => {
         var base = { 'x-auth': '' };
 
         request(app)
-            .get('/users/me')
+            .get('/me')
             .set(base)
             .expect(401)
             .expect((res) => {
@@ -367,9 +367,11 @@ describe('GET /users/me', () => {
     it('should hash the password', (done) => {
 
         var email = dummyUsers[0].email;
-
+        var base = { 'x-auth': dummyUsers[0].tokens[0].token };
+        
         request(app)
-            .get('/users')
+            .get('/me')
+            .set(base)
             .expect(200)
             .end((err, res) => {
                 if (err) {
@@ -385,13 +387,13 @@ describe('GET /users/me', () => {
 
 });
 
-describe('GET /users/login', () => {
+describe('GET /login', () => {
 
 
     it('should return me as a user', (done) => {
 
         request(app)
-            .post('/users/login')
+            .post('/login')
             .send({ email: dummyUsers[0].email, password: dummyUsers[0].password })
             .expect(200)
             .expect((res) => {
@@ -412,7 +414,7 @@ describe('GET /users/login', () => {
     it('should return a 400 because wrong email', (done) => {
 
         request(app)
-            .post('/users/login')
+            .post('/login')
             .send({ email: dummyUsers[0].email + '4', password: dummyUsers[0].password })
             .expect(400)
             .expect((res) => {
@@ -429,7 +431,7 @@ describe('GET /users/login', () => {
     it('should return a 400', (done) => {
 
         request(app)
-            .post('/users/login')
+            .post('/login')
             .send({ email: dummyUsers[0].email, password: dummyUsers[0].password + '4' })
             .expect(400)
             .expect((res) => {
@@ -445,14 +447,14 @@ describe('GET /users/login', () => {
 
 });
 
-describe('GET /users/me/logout', () => {
+describe('GET /me/logout', () => {
 
     it('/n should remove auth token on logout', (done) => {
 
         var base = { 'x-auth': dummyUsers[1].tokens[0].token };
 
         request(app)
-            .get('/users/me/logout')
+            .get('/me/logout')
             .set(base)
             .expect(200)
             .end((err, res) => {
