@@ -166,7 +166,7 @@ function sendVerificationEmail(email, token) {
     };
     // send mail with defined transport object
 
-    if (process.env.NODE_ENV == 'test' || process.env.NODE_ENV == 'testing') {
+    if (process.env.NODE_ENV == 'test') {
         //in test mode I do not send the message
         return Promise.resolve();
     }

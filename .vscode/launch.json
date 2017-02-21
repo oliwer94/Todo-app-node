@@ -32,7 +32,7 @@
             "cwd": "${workspaceRoot}",
             "runtimeExecutable": null,
             "env": {
-                "NODE_ENV": "testing"
+                "NODE_ENV": "test"
             }
         }
     ]
