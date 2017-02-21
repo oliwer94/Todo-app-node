@@ -16,6 +16,7 @@ var PORT = process.env.PORT;
 var app = express();
 
 app.use(bodyParser.json());
+app.use(express.static(__dirname+"/public"));
 
 //CREATE TODO
 app.post('/todos', authenticate, (req, res) => {
@@ -183,6 +184,8 @@ function sendVerificationEmail(email, token) {
     }
 
 }
+
+
 
 app.get('/users/verify/:id', (req, res) => {
 
