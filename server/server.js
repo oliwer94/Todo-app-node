@@ -162,7 +162,7 @@ function sendVerificationEmail(email, token) {
         to: `oliwer94@gmail.com`,//`${email}`, // list of receivers
         subject: 'Hello ✔', // Subject line
         text: 'Hello world ?', // plain text body
-        html: `<b>Hello world ?</b> <a href="http://localhost:3000/users/verify/${token}" > verify account</a>`   // html body
+        html: `<b>Hello world ?</b> <a href=${process.env.SITE_URL}/users/verify/${token}" > verify account</a>`   // html body
     };
     // send mail with defined transport object
 
