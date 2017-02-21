@@ -14,21 +14,13 @@ var {transporter} = require('./email/email');
 
 var PORT = process.env.PORT;
 var app = express();
-/*var MongoStore = require('connect-mongo')(express);*/
 
 app.use(bodyParser.json());
-/*app.use(express.session({
-  store: new MongoStore({
-    url: process.env.MONGODB_URI
-  }),
-  secret: jwt.sign(new Date().getTime(),'s7fzdfsh9df23')
-}));*/
-
 
 //CREATE TODO
-app.post('/todos', (req, res) => {
+app.post('/todos', authenticate, (req, res) => {
 
-    var todo = new Todo({ text: req.body.text });
+    var todo = new Todo({ text: req.body.text, _creator: req.user.id });
 
     todo.save().then((todos) => {
         res.send(todos);
@@ -40,8 +32,8 @@ app.post('/todos', (req, res) => {
 });
 
 //GET TODOS 
-app.get('/todos', (req, res) => {
-    Todo.find().then((todos) => {
+app.get('/todos', authenticate, (req, res) => {
+    Todo.find({ _creator: req.user.id }).then((todos) => {
         res.send({ todos });
     },
         (e) => {
@@ -50,14 +42,13 @@ app.get('/todos', (req, res) => {
     );
 });
 
-
 //GET ONE TODO
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
     if (!ObjectID.isValid(req.params.id)) {
         return res.sendStatus(400);
     }
 
-    Todo.findById(req.params.id).then((todo) => {
+    Todo.findOne({ _id: req.params.id, _creator: req.user.id }).then((todo) => {
         if (todo) {
             res.send({ todo });
         }
@@ -71,13 +62,13 @@ app.get('/todos/:id', (req, res) => {
     );
 });
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
 
     if (!ObjectID.isValid(req.params.id)) {
         return res.sendStatus(400);
     }
 
-    Todo.findByIdAndRemove(req.params.id).then((todo) => {
+    Todo.findOneAndRemove({ _id: req.params.id, _creator: req.user.id }).then((todo) => {
         if (todo) {
             res.send({ todo });
         }
@@ -91,7 +82,7 @@ app.delete('/todos/:id', (req, res) => {
     );
 });
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
     var id = req.params.id;
     var body = _.pick(req.body, ['text', 'completed']);
 
@@ -107,18 +98,32 @@ app.patch('/todos/:id', (req, res) => {
         body.completedAt = null;
     }
 
-    Todo.findByIdAndUpdate(id, { $set: body }, { new: true }).then((todo) => {
-        if (todo) {
-            res.send({ todo });
+    Todo.findById(id).then((todos) => {
+
+        if (todos) {
+
+            if (req.user._id.toHexString() !== todos._creator.toHexString()) {
+                return res.sendStatus(401);
+            }
+
+            Todo.findOneAndUpdate({ _creator: req.user._id, _id: id }, { $set: body }, { new: true }).then((todo) => {
+
+              //  if (todo) {                   
+                    res.send({ todo });
+              //  }
+              //  else {
+              //      res.sendStatus(404);
+              //  }
+
+            });
         }
         else {
             res.sendStatus(404);
         }
 
-    }).catch((e) => res.status(400).send(e));
+    }).catch((e) => res.status(400).send(e));;
 
 });
-
 
 //CREATE TODO
 app.post('/users', (req, res) => {
@@ -131,8 +136,8 @@ app.post('/users', (req, res) => {
         return user.generateAuthToken();
     })
         .then((token) => {
-           sendVerificationEmail(user.email,token);
-           res.header('x-auth', token).send(user);
+            sendVerificationEmail(user.email, token);
+            res.header('x-auth', token).send(user);
         }).catch((e) => {
             res.status(400).send(e);
         });
@@ -149,10 +154,9 @@ app.get('/users', (req, res) => {
     );
 });
 
-function sendVerificationEmail(email,token)
-{
+function sendVerificationEmail(email, token) {
     // setup email data with unicode symbols
-    
+
     let mailOptions = {
         from: 'Oliwer <bananbaszo@gmail.com>', // sender address
         to: `oliwer94@gmail.com`,//`${email}`, // list of receivers
@@ -161,38 +165,44 @@ function sendVerificationEmail(email,token)
         html: `<b>Hello world ?</b> <a href="http://localhost:3000/users/verify/${token}" > verify account</a>`   // html body
     };
     // send mail with defined transport object
-    transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-        return Promise.reject(error);
-       // return console.log(error);
+
+    if (process.env.NODE_ENV == 'test' || process.env.NODE_ENV == 'testing') {
+        //in test mode I do not send the message
+        return Promise.resolve();
     }
-    console.log('Message %s sent: %s', info.messageId, info.response);
-    Promise.resolve();
-});
+    else {
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                return Promise.reject(error);
+                // return console.log(error);
+            }
+            console.log('Message %s sent: %s', info.messageId, info.response);
+            Promise.resolve();
+
+        });
+    }
 
 }
 
-app.get('/users/verify/:id', (req,res) => {
+app.get('/users/verify/:id', (req, res) => {
 
-     var token = req.params.id;
+    var token = req.params.id;
 
-    User.findByToken(token).then((user) =>
-    {
-        if(!user)
-        {
+    User.findByToken(token).then((user) => {
+        if (!user) {
             return Promise.reject();
-        } 
-        user.verified  = true;
+        }
+        user.verified = true;
         user.tokens.shift();
 
         user.save().then((user) => {
             res.status(200).send("User has been verified");
-        });        
+        });
 
 
     }).catch((e) => {
         res.sendStatus(401);
-    });   
+    });
 });
 
 //GET USER ME 
@@ -204,20 +214,19 @@ app.post('/users/login', (req, res) => {
 
     var body = _.pick(req.body, ['email', 'password']);
 
-
-    User.findByCredentials(body.email, body.password).then((user) => {       
+    User.findByCredentials(body.email, body.password).then((user) => {
         return user.generateAuthToken().then((token) => {
             res.header('x-auth', token).send(user);
-        });        
+        });
     })
-        .catch((e) =>  {res.sendStatus(400);});
+        .catch((e) => { res.sendStatus(400); });
 });
 
 //Delte users/me/logout
-app.get('/users/me/token',authenticate, (req, res) => {
+app.get('/users/me/logout', authenticate, (req, res) => {
     req.user.removeToken(req.token).then(() => {
         res.status(200).send();
-    }, () => { res.status(400).send();});
+    }, () => { res.status(400).send(); });
 });
 
 
